@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PostgreSearch.Entities;
@@ -20,7 +21,11 @@ public class IndexModel(ApplicationDbContext context) : PageModel
 		CategoryId = categoryId;
 
 		await SetCategoriesAsync();
+		var st = new Stopwatch();
+		st.Start();
 		await SetArticlesAsync();
+		st.Stop();
+		Console.WriteLine(st.ElapsedMilliseconds);
 	}
 
 	private async Task SetCategoriesAsync()
