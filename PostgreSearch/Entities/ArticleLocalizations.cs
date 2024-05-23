@@ -1,6 +1,4 @@
-﻿using NpgsqlTypes;
-
-namespace PostgreSearch.Entities;
+﻿namespace PostgreSearch.Entities;
 
 public class ArticleLocalizations : BaseLocalization
 {
@@ -8,6 +6,4 @@ public class ArticleLocalizations : BaseLocalization
 
 	public long ArticleId { get; set; }
 	public Article? Article { get; set; }
-
-	public NpgsqlTsVector SearchVector { get; set; } = null!;
 }
