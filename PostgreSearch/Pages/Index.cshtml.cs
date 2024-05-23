@@ -45,16 +45,21 @@ public class IndexModel(ApplicationDbContext context) : PageModel
 
 		if (!string.IsNullOrWhiteSpace(Query))
 		{
-			//var prefixQuery = string.Join(" & ", Query.Split(' ').Select(term => term + ":*"));
+			var minSimilarity = 0.01;
+
 			articlesQueryable = articlesQueryable
 				.Select(x => new
 				{
 					Article = x,
-					//TsQuery = EF.Functions.ToTsQuery(x.Language == Languages.English ? "english" : "ukrainian", prefixQuery),
-					TsQuery = EF.Functions.PlainToTsQuery(x.Language == Languages.English ? "english" : "ukrainian", Query)
+					LanguageConfig = x.Language == Languages.English ? "english" : "ukrainian",
+					SearchText = x.Title + " " + x.Content,
+					TsQuery = EF.Functions.ToTsQuery(x.Language == Languages.English ? "english" : "ukrainian", Query),
 				})
-				.Where(x => x.Article.SearchVector.Matches(x.TsQuery))
-				.OrderByDescending(x => x.Article.SearchVector.Rank(x.TsQuery))
+				.Where(x => x.Article.SearchVector!.Matches(x.TsQuery) ||
+				            EF.Functions.TrigramsSimilarity(x.SearchText, Query) >= minSimilarity)
+				.OrderByDescending(x => x.Article.SearchVector!.Rank(x.TsQuery) != 0)
+				.ThenByDescending(x => EF.Functions.TrigramsSimilarity(x.Article.Title, Query))
+				.ThenByDescending(x => EF.Functions.TrigramsSimilarity(x.Article.Content, Query))
 				.Select(x => x.Article);
 		}
 

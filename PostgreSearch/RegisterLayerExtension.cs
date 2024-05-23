@@ -9,7 +9,9 @@ public static class RegisterLayerExtension
 	{
 		builder.Services.AddDbContext<ApplicationDbContext>(options =>
 		{
-			options.UseNpgsql(builder.Configuration.GetConnectionString(DatabaseName));
+			options.UseNpgsql(builder.Configuration.GetConnectionString(DatabaseName)
+				//, option => option.UseTrigrams()
+				);
 		});
 
 		return builder;
