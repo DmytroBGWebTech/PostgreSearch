@@ -45,11 +45,13 @@ public class IndexModel(ApplicationDbContext context) : PageModel
 
 		if (!string.IsNullOrWhiteSpace(Query))
 		{
+			//var prefixQuery = string.Join(" & ", Query.Split(' ').Select(term => term + ":*"));
 			articlesQueryable = articlesQueryable
 				.Select(x => new
 				{
 					Article = x,
-					TsQuery = EF.Functions.PlainToTsQuery(x.Language == Languages.English ? "english" : "ukrainian", Query),
+					//TsQuery = EF.Functions.ToTsQuery(x.Language == Languages.English ? "english" : "ukrainian", prefixQuery),
+					TsQuery = EF.Functions.PlainToTsQuery(x.Language == Languages.English ? "english" : "ukrainian", Query)
 				})
 				.Where(x => x.Article.SearchVector.Matches(x.TsQuery))
 				.OrderByDescending(x => x.Article.SearchVector.Rank(x.TsQuery))
@@ -68,7 +70,7 @@ public class IndexModel(ApplicationDbContext context) : PageModel
 
 		Articles = await articlesQueryable
 			.Select(x => new ArticleModel(x.Title, x.Content, x.Language, x.Article!.CategoryId))
-			.Take(take)
+			//.Take(take)
 			.ToListAsync();
 	}
 }

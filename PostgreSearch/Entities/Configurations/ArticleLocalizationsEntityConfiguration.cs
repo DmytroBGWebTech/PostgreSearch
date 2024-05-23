@@ -14,5 +14,10 @@ public class ArticleLocalizationsEntityConfiguration : IEntityTypeConfiguration<
 				"WHEN \"Language\" = 1 THEN to_tsvector('ukrainian', coalesce(\"Title\", '') || ' ' || coalesce(\"Content\", ''))" +
 				" ELSE NULL END",
 				stored: true);
+
+		builder
+			.HasIndex(b => new { b.Title, b.Content })
+			.HasMethod("GIN")
+			.IsTsVectorExpressionIndex("english");
 	}
 }
