@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PostgreSearch.Entities;
@@ -13,26 +14,30 @@ public class IndexModel(ApplicationDbContext context) : PageModel
 	public Languages? Language { get; set; }
 	public long? CategoryId { get; set; }
 
-	public void OnGet(string? query = null, Languages? language = null, long? categoryId = null)
+	public async Task OnGetAsync(string? query = null, Languages? language = null, long? categoryId = null)
 	{
 		Query = query;
 		Language = language ?? Languages.All;
 		CategoryId = categoryId;
 
-		SetCategories();
-		SetArticles();
+		await SetCategoriesAsync();
+		var st = new Stopwatch();
+		st.Start();
+		await SetArticlesAsync();
+		st.Stop();
+		Console.WriteLine(st.ElapsedMilliseconds);
 	}
 
-	private void SetCategories()
+	private async Task SetCategoriesAsync()
 	{
-		Categories = context.Set<Category>()
+		Categories = await context.Set<Category>()
 			.AsQueryable()
 			.Include(x => x.CategoryLocalizations)
 			.Select(x => new CategoryModel(x.Id, x.CategoryLocalizations![0].Title))
-			.ToList();
+			.ToListAsync();
 	}
 		
-	private void SetArticles()
+	private async Task SetArticlesAsync()
 	{
 		IQueryable<ArticleLocalizations> articlesQueryable = context.Set<ArticleLocalizations>()
 			.AsQueryable()
@@ -41,10 +46,14 @@ public class IndexModel(ApplicationDbContext context) : PageModel
 		if (!string.IsNullOrWhiteSpace(Query))
 		{
 			articlesQueryable = articlesQueryable
-				.Where(x => x.SearchVector.Matches(
-					EF.Functions.PlainToTsQuery(x.Language == Languages.English ? "english" : "ukrainian", Query)))
-				.OrderByDescending(x => x.SearchVector.Rank(
-					EF.Functions.PlainToTsQuery(x.Language == Languages.English ? "english" : "ukrainian", Query)));
+				.Select(x => new
+				{
+					Article = x,
+					TsQuery = EF.Functions.PlainToTsQuery(x.Language == Languages.English ? "english" : "ukrainian", Query),
+				})
+				.Where(x => x.Article.SearchVector.Matches(x.TsQuery))
+				.OrderByDescending(x => x.Article.SearchVector.Rank(x.TsQuery))
+				.Select(x => x.Article);
 		}
 
 		if (Language is not Languages.All)
@@ -57,8 +66,8 @@ public class IndexModel(ApplicationDbContext context) : PageModel
 			articlesQueryable = articlesQueryable.Where(x => x.Article!.CategoryId == CategoryId);
 		}
 
-		Articles = articlesQueryable
+		Articles = await articlesQueryable
 			.Select(x => new ArticleModel(x.Title, x.Content, x.Language, x.Article!.CategoryId))
-			.ToList();
+			.ToListAsync();
 	}
 }
