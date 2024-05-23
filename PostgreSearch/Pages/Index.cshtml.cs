@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PostgreSearch.Entities;
@@ -32,7 +31,7 @@ public class IndexModel(ApplicationDbContext context) : PageModel
 			.Select(x => new CategoryModel(x.Id, x.CategoryLocalizations![0].Title))
 			.ToListAsync();
 	}
-		
+
 	private async Task SetArticlesAsync(int take = 10)
 	{
 		IQueryable<ArticleLocalizations> articlesQueryable = context.Set<ArticleLocalizations>()
