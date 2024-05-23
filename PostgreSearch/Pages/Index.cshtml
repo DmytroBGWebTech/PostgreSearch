@@ -1,0 +1,119 @@
+﻿@page
+@using PostgreSearch.Models
+@model IndexModel
+@{
+	ViewData["Title"] = "Home page";
+}
+
+@section Scripts
+{
+	<script>
+		$(() => {
+			$('.languages-container .form-check').on('change', function () {
+				const value = $(this).data('value');
+				const url = new URL(window.location);
+				if (value === 2) {
+					url.searchParams.delete('language');
+				} else {
+					url.searchParams.set('language', value);
+				}
+
+				window.location = url.toString();
+			});
+
+			$('.categories-container .form-check').on('change', function () {
+				const value = $(this).data('value');
+				const url = new URL(window.location);
+				if (value === 0) {
+					url.searchParams.delete('categoryId');
+				} else {
+					url.searchParams.set('categoryId', value);
+				}
+
+				window.location = url.toString();
+			});
+
+			$('#SearchInputs').on('keydown', function (event) {
+				if (event.key === 'Enter') {
+					const value = $(this).val();
+					const url = new URL(window.location);
+					if (!value) {
+						url.searchParams.delete('query');
+					} else {
+						url.searchParams.set('query', value);
+					}
+
+					window.location = url.toString();
+				}
+			});
+
+			/*async function updatePage() {
+				const url = new URL(window.location);
+				const resp = await fetch(url);
+				const html = $(await resp.text()).find('#ArticlesContainer').html();
+
+				$('#ArticlesContainer').replaceWith(html
+			}*/
+		});
+	</script>
+}
+
+<div class="text-center">
+	<div class="d-flex flex-column gap-3 justify-content-center">
+		<input class="w-25 align-self-center" id="SearchInputs" placeholder="search" value="@Model.Query" />
+		<div class="languages-container d-flex flex-row gap-5 mx-5">
+			<span>Language</span>
+			<div class="form-check" data-value="2">
+				<input class="form-check-input" type="radio" name="Language" id="RadioAll" @GetCheckedForLanguage(Model.Language, Languages.All)>
+				<label class="form-check-label" for="RadioAll">All</label>
+			</div>
+			<div class="form-check" data-value="0">
+				<input class="form-check-input" type="radio" name="Language" id="RadioEn" @GetCheckedForLanguage(Model.Language, Languages.English)>
+				<label class="form-check-label" for="RadioEn">En</label>
+			</div>
+			<div class="form-check" data-value="1">
+				<input class="form-check-input" type="radio" name="Language" id="RadioUk" @GetCheckedForLanguage(Model.Language, Languages.Ukrainian)>
+				<label class="form-check-label" for="RadioUk">Uk</label>
+			</div>
+		</div>
+
+		<div class="categories-container d-flex flex-row gap-5 mx-5">
+			<span>Category</span>
+			<div class="form-check" data-value="0">
+				<input class="form-check-input" type="radio" name="Category" id="category-0" @(Model.CategoryId is null ? "checked" : string.Empty)>
+				<label class="form-check-label" for="category-0">All</label>
+			</div>
+			@for (var i = 0; i < Model.Categories.Count; i++)
+			{
+				var category = Model.Categories[i];
+				var isChecked = Model.CategoryId == category.Id;
+
+				<div class="form-check" data-value="@category.Id">
+					<input class="form-check-input" type="radio" name="Category" id="category-@(i+1)" @(isChecked ? "checked" : string.Empty)>
+					<label class="form-check-label" for="category-@(i+1)">@category.Title</label>
+				</div>
+			}
+		</div>
+	</div>
+
+	<hr />
+
+	<div id="ArticlesContainer">
+		@foreach (var article in Model.Articles)
+		{
+			<div>
+				<h2>@article.Title</h2>
+				<p>@article.Content</p>
+			</div>
+			<br />
+		}
+	</div>
+</div>
+
+@functions
+{
+	private string GetCheckedForLanguage(Languages? languageValue, Languages languageEnum)
+	{
+		return languageValue == languageEnum ? "checked" : string.Empty;
+	}
+}
