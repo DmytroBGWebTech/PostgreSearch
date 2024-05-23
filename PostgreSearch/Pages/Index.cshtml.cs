@@ -37,7 +37,7 @@ public class IndexModel(ApplicationDbContext context) : PageModel
 			.ToListAsync();
 	}
 		
-	private async Task SetArticlesAsync()
+	private async Task SetArticlesAsync(int take = 10)
 	{
 		IQueryable<ArticleLocalizations> articlesQueryable = context.Set<ArticleLocalizations>()
 			.AsQueryable()
@@ -68,6 +68,7 @@ public class IndexModel(ApplicationDbContext context) : PageModel
 
 		Articles = await articlesQueryable
 			.Select(x => new ArticleModel(x.Title, x.Content, x.Language, x.Article!.CategoryId))
+			.Take(take)
 			.ToListAsync();
 	}
 }

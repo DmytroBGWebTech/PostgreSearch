@@ -13,7 +13,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		base.OnModelCreating(modelBuilder);
-
-		modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
+		var ass = GetType().Assembly;
+		modelBuilder.ApplyConfigurationsFromAssembly(ass);
 	}
 }
